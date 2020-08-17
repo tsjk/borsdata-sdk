@@ -1,21 +1,21 @@
+from http import HTTPStatus
 from json import loads
 from time import sleep
 from typing import List
-from http import HTTPStatus
 
 import urllib3
 from requests import get
 
+from .APIError import APIError
 from .models.Branch import Branch
+from .models.Country import Country
 from .models.Instrument import Instrument
 from .models.InstrumentUpdate import InstrumentUpdate
 from .models.Market import Market
+from .models.Report import Report
 from .models.Sector import Sector
 from .models.StockPrice import StockPrice
-from .models.Country import Country
 from .models.StockSplit import StockSplit
-from .models.Report import Report
-from .APIError import APIError
 
 RATE_LIMIT = 429
 RATE_WAIT = .3
@@ -132,21 +132,10 @@ class BorsdataAPI:
 
         params = self._params.copy()
 
-        while True:
-            if start and end:
-                params.update({'from': start, 'to': end})
+        if start and end:
+            params.update({'from': start, 'to': end})
 
-            res = get(self._root + 'instruments/{}/stockprices'.format(ins_id),
-                      params=params, verify=False)
-
-            if res.status_code != 200 and not res.status_code == RATE_LIMIT:
-                raise APIError(
-                    'Failed to communicate with the borsdata_sdk api')
-
-            if res.status_code == 200:
-                break
-
-            sleep(0.3)
+        _, res = self._get_with_params('instruments/{}/stockprices'.format(ins_id), params=params)
 
         entries = [StockPrice(**entry)
                    for entry in loads(res.content).get('stockPricesList')]
@@ -161,6 +150,25 @@ class BorsdataAPI:
         """
 
         status, data = self._get('instruments/stockprices/last')
+
+        return [StockPrice(**entry)
+                for entry in data.get('stockPricesList', [])]
+
+    def get_instrument_stock_price_date(self, date) -> List[StockPrice]:
+        """Returns StockPrices at date for all instruments.
+
+        Arguments:
+            date {str} --  Determines for which day to get all stock prices, ex: '2009-04-22'
+
+        Returns:
+            List[StockPrice] -- List of all stock prices that were available at date.
+        """
+
+        params = self._params.copy()
+
+        params.update({'date': date})
+
+        status, data = self._get_with_params('instruments/stockprices/date', params=params)
 
         return [StockPrice(**entry)
                 for entry in data.get('stockPricesList', [])]
@@ -201,14 +209,38 @@ class BorsdataAPI:
         Arguments:
             endpoint {str} -- endpoint to access, ex: `instruments/StockSplits`.
 
-        Returns:
-            (int, dict) -- The first entry, holds the status code of the response; the second, holds the response content parsed from json.
+        Returns: (int, dict) -- The first entry, holds the status code of the response; the second, holds the
+        response content parsed from json.
         """
 
         while True:
             res = get(self._root + endpoint, self._params, verify=False)
 
             if res.status_code != RATE_LIMIT:
+                break
+
+            sleep(RATE_WAIT)
+
+        return res.status_code, res.json()
+
+    def _get_with_params(self, endpoint, params) -> (int, dict):
+        """Perform a remote request to the API and retries on rate limit responses, returns json payload on success.
+
+        Arguments:
+            endpoint {str} -- endpoint to access, ex: `instruments/StockSplits`.
+            params {dict} -- parameters
+
+        Returns: (int, dict) -- The first entry, holds the status code of the response; the second, holds the
+        response content parsed from json.
+        """
+
+        while True:
+            res = get(self._root + endpoint, params=params, verify=False)
+
+            if res.status_code != 200 and res.status_code != RATE_LIMIT:
+                raise APIError('Failed to communicate with the borsdata_sdk api')
+
+            if res.status_code == 200:
                 break
 
             sleep(RATE_WAIT)

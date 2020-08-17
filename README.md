@@ -1,6 +1,4 @@
-# Borsdata python SKD
-
-[![Build Status](https://travis-ci.com/JoelRoxell/borsdata-sdk.svg?branch=master)](https://travis-ci.com/JoelRoxell/borsdata-sdk)
+# Borsdata python SDK
 
 > unofficial
 
@@ -8,7 +6,7 @@ python SDK for the [Börsdata API](https://github.com/Borsdata-Sweden/API), [det
 
 ## Install
 
-`pip install borsdata-sdk`
+`( git pull https://github.com/tsjk/borsdata-sdk && cd borsdata-sdk && pip install . )`
 
 ## Usage
 
@@ -37,6 +35,9 @@ updated_instruments = borsdata.get_instruments_updated()
 
 # Last entries of updated instruments
 list_of_updated_instruments = borsdata.get_instrument_stock_price_last()
+
+# Entries for all instruments at a certain date
+list_20090423 = borsdata.get_instrument_stock_price_date('2009-04-23')
 
 # Reports
 yearly_reports = borsdata.get_instrument_reports(3, 'year')

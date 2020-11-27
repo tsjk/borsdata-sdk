@@ -51,6 +51,11 @@ class BorsdataAPI:
         return [Market(**market) for market in self._get_data_object('markets')]
 
     def get_branches(self):
+        """Returns all industries.
+
+        Returns:
+            List[Branch] -- List of industries.
+        """
         return [Branch(**branch) for branch in self._get_data_object('branches')]
 
     def get_sectors(self) -> List[Sector]:
@@ -66,10 +71,19 @@ class BorsdataAPI:
         """Return all countries.
 
         Returns:
-            List[Country] -- Lost of countires.
+            List[Country] -- List of countries.
         """
 
         return [Country(**country) for country in self._get_data_object('countries')]
+
+    def get_translation_metadata(self) -> List[TranslationMetadata]:
+        """Return all translation metadata.
+
+        Returns:
+            List[TranslationMetadata] -- List of translation metadata.
+        """
+
+        return [TranslationMetadata(**translation_metadata) for translation_metadata in self._get_data_object('translationmetadata')]
 
     def get_instruments(self, markets=None) -> List[Instrument]:
         """Returns all instruments.
@@ -110,17 +124,17 @@ class BorsdataAPI:
 
     def get_instrument_stock_price(
             self, ins_id, start=None, end=None) -> List[StockPrice]:
-        """Returns stockprices for an instrument (ins_id), 
-           it is possible to determine the timespan using start and end. 
+        """Returns stockprices for an instrument (ins_id),
+           it is possible to determine the timespan using start and end.
            Max 10 years, if no time filters provided.
 
         Arguments:
             ins_id {int} -- Instrument id.
 
         Keyword Arguments:
-            start {str} --  Determines from which day to start the collection, 
+            start {str} --  Determines from which day to start the collection,
                 ex: '2009-04-22' (default: {None})
-            end {str} --  Determines the collection limit, ex:'2009-04-25', 
+            end {str} --  Determines the collection limit, ex:'2009-04-25',
                 (default: {None})
 
         Raises:

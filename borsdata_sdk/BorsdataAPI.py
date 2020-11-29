@@ -16,6 +16,7 @@ from .models.Report import Report
 from .models.Sector import Sector
 from .models.StockPrice import StockPrice
 from .models.StockSplit import StockSplit
+from .models.TranslationMetadata import TranslationMetadata
 
 RATE_LIMIT = 429
 RATE_WAIT = .3
